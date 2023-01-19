@@ -453,7 +453,7 @@ with st.expander("Check the analysis"):
     bar=base.mark_bar(color='green',opacity=0.5).encode(y='n_new_validators:Q')
     st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new validators vs LUNA price',width=1000))
 
-    st.markdown('The first thing to note is that the three charts are very similar. When the price of LUNA rises, we see a spike in all three stakings. The values are maintained and increase each time the price of LUNA increases.
+    st.markdown('The first thing to note is that the three charts are very similar. When the price of LUNA rises, we see a spike in all three stakings. The values are maintained and increase each time the price of LUNA increases.')
 st.write('')
 st.subheader('Conclusions')
 with st.expander("Check the analysis"):
