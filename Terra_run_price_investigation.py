@@ -181,17 +181,17 @@ with st.expander("Check the analysis"):
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='blue',opacity=0.5).encode(y='n_txns:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly transactions vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly transactions vs LUNA price',width=1000))
     
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='green',opacity=0.5).encode(y='n_wallets:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active wallets vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active wallets vs LUNA price',width=1000))
     
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='red',opacity=0.5).encode(y='n_new_wallets:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new wallets vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new wallets vs LUNA price',width=1000))
     
 
 
@@ -318,27 +318,27 @@ with st.expander("Check the analysis"):
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='blue',opacity=0.5).encode(y='new_contracts:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new contracts vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new contracts vs LUNA price',width=1000))
     
     base=alt.Chart(df2).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
-    bar=base.mark_bar(color='dark blue',opacity=0.6).encode(y='n_contracts:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active contracts vs LUNA price'))
+    bar=base.mark_bar(color='darkblue',opacity=0.6).encode(y='n_contracts:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active contracts vs LUNA price',width=1000))
     
     base=alt.Chart(df3).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
-    bar=base.mark_bar(color='dark green',opacity=0.5).encode(y='n_txns:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly swaps vs LUNA price'))
+    bar=base.mark_bar(color='darkgreen',opacity=0.5).encode(y='n_txns:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly swaps vs LUNA price',width=1000))
     
     base=alt.Chart(df3).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='green',opacity=0.6).encode(y='n_wallets:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active swappers vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active swappers vs LUNA price',width=1000))
     
     base=alt.Chart(df3).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
-    bar=base.mark_bar(color='red',opacity=0.5).encode(y='n_new_wallets:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new swappers vs LUNA price'))
+    bar=base.mark_bar(color='red',opacity=0.5).encode(y='n_new_swappers:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new swappers vs LUNA price',width=1000))
     
 
 
@@ -428,27 +428,27 @@ with st.expander("Check the analysis"):
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='blue',opacity=0.5).encode(y='n_txns:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly staking actions vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly staking actions vs LUNA price',width=1000))
     
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='red',opacity=0.4).encode(y='n_wallets:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active stakers vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active stakers vs LUNA price',width=1000))
     
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
-    bar=base.mark_bar(color='dark green',opacity=0.5).encode(y='n_validators:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active validators vs LUNA price'))
+    bar=base.mark_bar(color='darkgreen',opacity=0.5).encode(y='n_validators:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active validators vs LUNA price',width=1000))
     
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='red',opacity=0.6).encode(y='n_new_wallets:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new stakers vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new stakers vs LUNA price',width=1000))
     
     base=alt.Chart(df).encode(x=alt.X('date:O'))
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='green',opacity=0.5).encode(y='n_new_validators:Q')
-    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new validators vs LUNA price'))
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new validators vs LUNA price',width=1000))
     
 
 
