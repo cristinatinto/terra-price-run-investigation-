@@ -106,12 +106,12 @@ with st.expander("Check the analysis"):
     with col1:
         st.altair_chart(alt.Chart(df)
         .mark_line()
-        .encode(x='date:N', y='price_usd:Q',color='symbol')
+        .encode(x='date:N', y='price_usd:Q',color='symbol',width=500)
         .properties(title='Hourly prices evolution'))
     
     col2.altair_chart(alt.Chart(df2)
         .mark_line()
-        .encode(x='date:N', y='price_usd:Q',color='symbol')
+        .encode(x='date:N', y='price_usd:Q',color='symbol',width=300)
         .properties(title='Daily prices evolution'))
 
 
