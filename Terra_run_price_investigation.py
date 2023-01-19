@@ -111,6 +111,7 @@ with st.expander("Check the analysis"):
     .encode(x='date:N', y='price_usd:Q',color='symbol')
     .properties(title='Daily prices evolution',width=1000))
 
+    st.markdown('The price of Luna has been analysed since the beginning of this year. We have compared it with other tokens in the Luna ecosystem and observed that only the LUNA coin has seen a rise in price. The others have remained stable. From here, we started to analyse the activity of LUNA, such as the number of transactions, the active users and the volume moved. All the information can be found in the next section.')
 
 st.write('')
 st.subheader('2. Terra main activity comparison against LUNA price')
@@ -192,9 +193,11 @@ with st.expander("Check the analysis"):
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='red',opacity=0.5).encode(y='n_new_wallets:Q')
     st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new wallets vs LUNA price',width=1000))
-    
 
+    st.markdown('In all three cases we can observe that, when the specific hour where the price of LUNA rises, the activity of this currency also rises, precisely at the same hour. Then it goes down again a little but, even so, the activity of LUNA remains more active than before. In the three cases we can see that they have very similar graphs.')
+    st.markdown('After analysing the global activity, we have focused on analysing the development of the LUNA ecosystem since the beginning of the year. All the analysis can be found in the following section.')  
 
+st.write('')
 st.subheader("3. Ecosystem development before and after LUNA price movements")
 st.markdown('**Methods:**')
 st.write('In this analysis we will focus on the Terra main ecosystem development against LUNA price evolution. More specifically, we will analyze the following data:')
@@ -339,12 +342,12 @@ with st.expander("Check the analysis"):
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='red',opacity=0.5).encode(y='n_new_swappers:Q')
     st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new swappers vs LUNA price',width=1000))
-    
 
+    st.markdown('We can see that in the case of new contracts it has risen dramatically at the same time as the price of LUNA has risen. However, after that, the new contracts go down again. If we look at active contracts, swaps and active swappers, we see that they also rise at the same time as the price of LUNA and, moreover, they are increasing more and more. In the final section following next, it can be found all about the staking of LUNA.') 
 
 # In[9]:
 
-
+st.write('')
 st.subheader("4. Staking before and after LUNA price movements")
 st.markdown('**Methods:**')
 st.write('In this analysis we will focus on the Terra staking against LUNA price evolution. More specifically, we will analyze the following data:')
@@ -449,12 +452,22 @@ with st.expander("Check the analysis"):
     line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
     bar=base.mark_bar(color='green',opacity=0.5).encode(y='n_new_validators:Q')
     st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new validators vs LUNA price',width=1000))
-    
+
+    st.markdown('The first thing to note is that the three charts are very similar. When the price of LUNA rises, we see a spike in all three stakings. The values are maintained and increase each time the price of LUNA increases.
+st.write('')
+st.subheader('Conclusions')
+with st.expander("Check the analysis"):
+    st.markdown('Firstly, the price of Luna has been analysed since the beginning of this year. We have compared it with other tokens in the Luna ecosystem and observed that only the LUNA coin has seen a rise in price. The others have remained stable. From here, we started to analyse the activity of LUNA, such as the number of transactions, the active users and the volume moved. In all three cases we can observe that, when the specific hour where the price of LUNA rises, the activity of this currency also rises, precisely at the same hour. Then it goes down again a little but, even so, the activity of LUNA remains more active than before. In the three cases we can see that they have very similar graphs.')
+ 
+    st.markdown('After analysing the global activity, we have focused on analysing the development of the LUNA ecosystem since the beginning of the year. We can see that in the case of new contracts it has risen dramatically at the same time as the price of LUNA has risen. However, after that, the new contracts go down again. If we look at active contracts, swaps and active swappers, we see that they also rise at the same time as the price of LUNA and, moreover, they are increasing more and more.')
+
+    st.markdown('Finally, staking actions, stakers and validators have been analysed. The three charts are very similar. When the price of LUNA rises, we see a spike in all three stakings. The values are maintained and increase each time the price of LUNA increases.')
+    st.markdown('For some of the above reasons, I think that the main cause of LUNA sudden jumps were caused by the LUNA users itself who generated an abnormal amount of activity in the major of the sector causing the LUNA price go up. Then, it seems that what LUNA need to be succeessful and increase in price and capital is the incorporation of mass adoption and try to make the ecosystem more useful to lead users to be more active there.')
 
 
 # In[14]:
 
-
+st.write('')
 st.markdown('This dashboard has been done by _Cristina Tintó_ powered by **Flipside Crypto** data and carried out for **MetricsDAO**.')
 st.markdown('All the codes can be found in [Github](https://github.com/cristinatinto/terra-price-run-investigation-)')
 
