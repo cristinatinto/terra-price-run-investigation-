@@ -15,7 +15,7 @@ import matplotlib.ticker as ticker
 import numpy as np
 import altair as alt
 sdk = ShroomDK("679043b4-298f-4b7f-9394-54d64db46007")
-st.set_page_config(page_title="Terra in 2023", layout="wide",initial_sidebar_state="collapsed")
+st.set_page_config(page_title="$LUNA price run investigation", layout="wide",initial_sidebar_state="collapsed")
 
 
 
@@ -33,33 +33,114 @@ for percent_complete in range(100):
 # In[5]:
 
 
-st.title('Terra New Year New Activity')
+st.title('Terra Run Price Investigation')
 st.write('')
-st.markdown('The holidays and New Year are often chaotic in the crypto and DEFI space, as users make a spree of new transactions and wallets as they receive (and give) some cash and coins as holiday gifts.')
-st.markdown(' The idea of this work is to try to respond if this flurry of winter activity has impacted the Terra ecosystem, if users are creating new wallets or buying tokens with their newfound holiday wealth.')
-st.write('This dashboard comprehens the following sections:')
-st.markdown('1. Terra main activity comparison before and after holidays')
-st.markdown('2. Terra supply before and after holidays')
-st.markdown('3. Terra development before and after holidays')
-st.markdown('4. Terra staking activity before and after holidays')
+st.markdown('Beginning in the wee hours of Monday, January 9 (ET), the price of LUNA skyrocketed, from $1.37 to a high of nearly $2 before settling down at roughly $1.60.')
+st.markdown(' The idea of this work is to try to find some reason why these jumps are occurring. The goal here is to understand why did the price jump so suddenly on Monday night and if the price seems to remain above or below the current marks.')
 st.write('')
-st.subheader('1. Terra main activity')
+st.write('For this reason, this dashboard comprehens the following sections:')
+st.markdown('1. LUNA price comparison against the major competitors')
+st.markdown('2. Terra main activity comparison against LUNA price')
+st.markdown('3. Terra development before and after $LUNA jumps')
+st.markdown('4. Terra staking activity before and after LUNA jumps')
+st.write('')
+
+st.subheader('1. $LUNA price comparison')
+st.write('In this analysis we will focus on the evolution of the LUNA token during since the start of the year and we are gonna compare against the major crypto competitors. More specifically.')
+sql="""
+WITH
+t1 as (
+select
+  trunc(recorded_hour,'hour') as date,
+  'LUNA' as symbol,
+  avg(close) as price_usd
+  from crosschain.core.fact_hourly_prices where id='terra-luna-2' and date>='2023-01-01'
+  group by 1,2
+),
+  t2 as (
+select
+  trunc(recorded_at,'hour') as date,
+  symbol,
+  avg(price) as price_usd
+  from osmosis.core.dim_prices where symbol in ('OSMO','ATOM','JUNO','EVMOS') and date>='2023-01-01'
+  group by 1,2
+)
+SELECT * from t1 union select * from t2
+"""
+
+sql2="""
+WITH
+t1 as (
+select
+  trunc(recorded_hour,'day') as date,
+  'LUNA' as symbol,
+  avg(close) as price_usd
+  from crosschain.core.fact_hourly_prices where id='terra-luna-2' and date>='2023-01-01'
+  group by 1,2
+),
+  t2 as (
+select
+  trunc(recorded_at,'day') as date,
+  symbol,
+  avg(price) as price_usd
+  from osmosis.core.dim_prices where symbol in ('OSMO','ATOM','JUNO','EVMOS') and date>='2023-01-01'
+  group by 1,2
+)
+SELECT * from t1 union select * from t2
+"""
+st.experimental_memo(ttl=50000)
+def memory(code):
+    data=sdk.query(code)
+    return data
+
+results = memory(sql)
+df = pd.DataFrame(results.records)
+df.info()
+results2 = memory(sql2)
+df2 = pd.DataFrame(results2.records)
+df2.info()
+
+with st.expander("Check the analysis"):
+    
+    col1,col2=st.columns(2)
+    with col1:
+        st.altair_chart(alt.Chart(df)
+        .mark_bar()
+        .encode(x='date:N', y='price_usd:Q',color='symbol')
+        .properties(title='Hourly prices evolution'))
+    
+    col2.altair_chart(alt.Chart(df2)
+        .mark_bar()
+        .encode(x='date:N', y='price_usd:Q',color='symbol')
+        .properties(title='Daily prices evolution'))
+
+
+st.write('')
+st.subheader('2. Terra main activity comparison against LUNA price')
 st.markdown('**Methods:**')
-st.write('In this analysis we will focus on the activity of Terra ecosystem during this past month. More specifically, we will analyze the following data:')
-st.markdown('● Total number transactions')
-st.markdown('● Total active users')
-st.markdown('● Total volume moved')
+st.write('In this analysis we will focus on the activity of Terra ecosystem during this year in comparison to the LUNA price. More specifically, we will analyze the following data:')
+st.markdown('● Total number transactions vs LUNA price')
+st.markdown('● Total active users vs LUNA price')
+st.markdown('● Total volume moved vs LUNA price')
 st.write('')
 
 sql="""
-with txns as(
+with 
+luna as (
+select
+  trunc(recorded_hour,'hour') as date,
+  avg(close) as price_usd
+  from crosschain.core.fact_hourly_prices where id='terra-luna-2' and date>='2023-01-01'
+  group by 1
+),
+txns as(
 select 
-  date_trunc('day',block_timestamp) as date,
+  date_trunc('hour',block_timestamp) as date,
   count(distinct tx_id) as n_txns,
   count(distinct tx_sender) as n_wallets,
   sum(fee) as fee_luna
 from terra.core.fact_transactions
-  where block_timestamp >= '2022-12-08' and block_timestamp <= '2023-01-08'
+  where block_timestamp >= '2023-01-01'
 group by date
 order by date desc
 ),
@@ -69,21 +150,20 @@ select
   count(tx_sender) as n_new_wallets
   from (
 select 
-  date_trunc('day',min(block_timestamp)) as date,
+  date_trunc('hour',min(block_timestamp)) as date,
   tx_sender
 from terra.core.fact_transactions
 group by tx_sender
 )
-  where date >= '2022-12-08' and date <= '2023-01-08'
+  where date >= '2023-01-01'
 group by date
 )
 
 select 
   t.*,
-    case when t.date>='2022-12-23' then 'Holidays period' else 'Before Holidays' end as period,
-  n.n_new_wallets,
-  sum(n_new_wallets) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_new_wallets
-from txns t left join new_wallets n using(date)
+  price_usd,
+  n.n_new_wallets
+from txns t left join new_wallets n using(date) left join luna l using(date)
 order by date desc
 
 """
@@ -101,272 +181,128 @@ df.info()
 
 with st.expander("Check the analysis"):
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_txns:Q',color='period')
-        .properties(title='Daily transactions evolution'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='blue',opacity=0.5).encode(y='n_txns:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly transactions vs LUNA price'))
     
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_txns:Q',color='period')
-        .properties(title='Transactions comparison'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='green',opacity=0.5).encode(y='n_wallets:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active wallets vs LUNA price'))
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_wallets:Q',color='period')
-        .properties(title='Daily active wallets evolution'))
-    
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_wallets:Q',color='period')
-        .properties(title='Active wallets comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='fee_luna:Q',color='period')
-        .properties(title='Daily fees evolution',))
-    
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='fee_luna:Q',color='period')
-        .properties(title='Fees comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_new_wallets:Q',color='period')
-        .properties(title='Daily new users evolution'))
-    
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_new_wallets:Q',color='period')
-        .properties(title='New users comparison'))
-    
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='red',opacity=0.5).encode(y='n_new_wallets:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new wallets vs LUNA price'))
     
 
 
-# In[7]:
-
-
-st.subheader("2. Supply before and after holidays")
+st.subheader("3. Ecosystem development before and after LUNA price movements")
 st.markdown('**Methods:**')
-st.write('In this analysis we will focus on the LUNA supply. More specifically, we will analyze the following data:')
-st.markdown('● $LUNA supply')
-st.markdown('● Circulating supply')
+st.write('In this analysis we will focus on the Terra main ecosystem development against LUNA price evolution. More specifically, we will analyze the following data:')
+st.markdown('● New deployed contracts vs LUNA price')
+st.markdown('● Used contracts vs LUNA price')
+st.markdown('● Swaps activity vs LUNA price')
 
 
 
 sql="""
---credits: adriaparcerisas
-with SEND as 
-(select SENDER,
-  sum(AMOUNT) as sent_amount
-from 
-terra.core.ez_transfers
-WHERE
-CURRENCY ilike 'uluna'
-group by SENDER
-  ),
-  
-RECEIVE as 
-(select RECEIVER,
-  sum(AMOUNT) as received_amount
-from 
-terra.core.ez_transfers
-WHERE
-CURRENCY ilike 'uluna'
-group by RECEIVER
-  ),
-total_supp as (select sum(received_amount)/1e4 as total_supply 
-  from RECEIVE r 
-  left join SEND s on r.RECEIVER=s.SENDER 
-  where sent_amount is null),
-t1 as
-(select date_trunc('day',BLOCK_TIMESTAMP) as date,
-sum(case when FROM_CURRENCY ilike 'uluna' then FROM_AMOUNT/1e6 else null end) as from_amountt,
-sum(case when to_CURRENCY ilike 'uluna' then FROM_AMOUNT/1e6 else null end) as to_amountt,
-from_amountt-to_amountt as circulating_volume
-from
-  terra.core.ez_swaps
-group by 1
-), 
-  t3 as (select 
-sum(circulating_volume) over (order by date) as circulating_supply ,
-  DATE from t1
-  )
-select total_supply,circulating_supply,  circulating_supply*100/total_supply as ratio 
-  from t3 join total_supp
-where 
-date=CURRENT_DATE-30
-    """
-
-sql2="""
---credits: adriaparcerisas
-with SEND as 
-(select SENDER,
-  sum(AMOUNT) as sent_amount
-from 
-terra.core.ez_transfers
-WHERE
-CURRENCY ilike 'uluna'
-group by SENDER
-  ),
-  
-RECEIVE as 
-(select RECEIVER,
-  sum(AMOUNT) as received_amount
-from 
-terra.core.ez_transfers
-WHERE
-CURRENCY ilike 'uluna'
-group by RECEIVER
-  ),
-total_supp as (select sum(received_amount)/1e4 as total_supply 
-  from RECEIVE r 
-  left join SEND s on r.RECEIVER=s.SENDER 
-  where sent_amount is null),
-t1 as
-(select date_trunc('day',BLOCK_TIMESTAMP) as date,
-sum(case when FROM_CURRENCY ilike 'uluna' then FROM_AMOUNT/1e6 else null end) as from_amountt,
-sum(case when to_CURRENCY ilike 'uluna' then FROM_AMOUNT/1e6 else null end) as to_amountt,
-from_amountt-to_amountt as circulating_volume
-from
-  terra.core.ez_swaps
-group by 1
-), 
-  t3 as (select 
-sum(circulating_volume) over (order by date) as circulating_supply ,
-  DATE from t1
-  )
-select total_supply,circulating_supply,  circulating_supply*100/total_supply as ratio 
-  from t3 join total_supp
-where 
-date=CURRENT_DATE-1
-
-"""
-
-results = memory(sql)
-df = pd.DataFrame(results.records)
-df.info()
-
-results2 = memory(sql2)
-df2 = pd.DataFrame(results2.records)
-df2.info()
-
-with st.expander("Check the analysis"):
-    col1,col2=st.columns(2)
-    with col1:
-        st.metric('Total supply before holidays',df['total_supply'])
-    col2.metric('Total supply after holidays',df2['total_supply'])
-    
-    col1,col2=st.columns(2)
-
-    with col1:
-        st.metric('Circulating supply before holidays',df['circulating_supply'])
-    col2.metric('Circulating supply after holidays',df2['circulating_supply'])
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.metric('Ratio before holidays',df['ratio'])
-    col2.metric('Ratio after holidays',df2['ratio'])
-    
-    
-
-
-# In[8]:
-
-
-st.subheader("3. Ecosystem development before and after holidays")
-st.markdown('**Methods:**')
-st.write('In this analysis we will focus on the Terra main ecosystem development. More specifically, we will analyze the following data:')
-st.markdown('● New deployed contracts')
-st.markdown('● Used contracts')
-st.markdown('● Swaps activity')
-
-
-
-sql="""
+with
+luna as (
+select
+  trunc(recorded_hour,'hour') as date,
+  avg(close) as price_usd
+  from crosschain.core.fact_hourly_prices where id='terra-luna-2' and date>='2023-01-01'
+  group by date
+),
+contracts as (
 select 
-   date_trunc('day',block_timestamp) as date,    
-   case when date>='2022-12-23' then 'Holidays period' else 'Before Holidays' end as period,
-  count(distinct tx_id) as n_contracts,
-  sum(n_contracts) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_contracts
+   date_trunc('hour',block_timestamp) as date,    
+  count(distinct tx_id) as new_contracts
 from terra.core.ez_messages
 where message_type = '/cosmwasm.wasm.v1.MsgInstantiateContract'
-	and block_timestamp >= '2022-12-08' and block_timestamp <= '2023-01-08'
-group by date, period
+	and block_timestamp >= '2023-01-01'
+group by date
 order by date desc
+)
+select x.date,new_contracts,price_usd from contracts x join luna y on x.date=y.date 
 
 
 """
 
 
 sql2="""
+with
+luna as (
+select
+  trunc(recorded_hour,'hour') as date,
+  avg(close) as price_usd
+  from crosschain.core.fact_hourly_prices where id='terra-luna-2' and date>='2023-01-01'
+  group by date
+),
+contracts as (
 select 
-   date_trunc('day',block_timestamp) as date,
-      case when date>='2022-12-23' then 'Holidays period' else 'Before Holidays' end as period,
-  count(distinct tx:body:messages[0]:contract) as n_contracts,
-    sum(n_contracts) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_contracts
+   date_trunc('hour',block_timestamp) as date,
+  count(distinct tx:body:messages[0]:contract) as n_contracts
   from terra.core.fact_transactions 
   --where ATTRIBUTE_KEY in ('contract','u_contract_address','contract_name',
   --'contract_version','contract_addr','contract_address','dao_contract_address','pair_contract_addr','nft_contract')
-  where block_timestamp >= '2022-12-08' and block_timestamp <= '2023-01-08'
+  where block_timestamp >= '2023-01-01'
 
-group by date, period
+group by date
 order by date desc
+)
+select x.date,n_contracts,price_usd from contracts x join luna y on x.date=y.date 
+
+
 """
 
 
-sql3="""
-with txns as(
+sql3=""" 
+with
+luna as (
+select
+  trunc(recorded_hour,'hour') as date,
+  avg(close) as price_usd
+  from crosschain.core.fact_hourly_prices where id='terra-luna-2' and date>='2023-01-01'
+  group by date
+),
+txns as(
 select 
-  date_trunc('day',block_timestamp) as date,
-      case when date>='2022-12-23' then 'Holidays period' else 'Before Holidays' end as period,
+  date_trunc('hour',block_timestamp) as date,
   count(distinct tx_id) as n_txns,
   count(distinct trader) as n_wallets,
-  sum(to_amount/1e6) as fee_luna,
-  sum(n_txns) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_txns,
-  sum(n_wallets) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_wallets,
-  sum(fee_luna) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_fee_luna
+  sum(to_amount/1e6) as fee_luna
 from terra.core.ez_swaps
-  where block_timestamp >= '2022-12-08' and block_timestamp <= '2023-01-08'
+  where block_timestamp >= '2023-01-01'
   and to_currency = 'uluna'
-group by date, period
+group by date
 order by date desc
 ),
 new_wallets as (
 select 
   date,
-  count(trader) as n_new_wallets
+  count(trader) as n_new_swappers
   from (
 select 
-  date_trunc('day',min(block_timestamp)) as date,
+  date_trunc('hour',min(block_timestamp)) as date,
   trader
 from terra.core.ez_swaps
 group by trader
 )
-   where date >= '2022-12-08' and date <= '2023-01-08'
+   where date >= '2023-01-01'
 group by date
 )
 
 select 
   t.*,
-  n.n_new_wallets,
-  sum(n_new_wallets) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_new_wallets
-from txns t left join new_wallets n using(date)
+  price_usd,
+  n.n_new_swappers
+from txns t left join new_wallets n using(date) left join luna l using(date)
 order by date desc
 
 """
-
-
-
 
 results = memory(sql)
 df = pd.DataFrame(results.records)
@@ -380,102 +316,59 @@ results3 = memory(sql3)
 df3 = pd.DataFrame(results3.records)
 df3.info()
 
-
-
 with st.expander("Check the analysis"):
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_contracts:Q',color='period')
-        .properties(title='Daily new contracts evolution'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='blue',opacity=0.5).encode(y='new_contracts:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new contracts vs LUNA price'))
     
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_contracts:Q',color='period')
-        .properties(title='New contracts comparison'))
+    base=alt.Chart(df2).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='dark blue',opacity=0.6).encode(y='n_contracts:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active contracts vs LUNA price'))
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df2)
-        .mark_bar()
-        .encode(x='date:N', y='n_contracts:Q',color='period')
-        .properties(title='Daily active contracts evolution'))
+    base=alt.Chart(df3).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='dark green',opacity=0.5).encode(y='n_txns:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly swaps vs LUNA price'))
     
-    col2.altair_chart(alt.Chart(df2)
-        .mark_bar()
-        .encode(x='period:N', y='n_contracts:Q',color='period')
-        .properties(title='Active contracts comparison'))
+    base=alt.Chart(df3).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='green',opacity=0.6).encode(y='n_wallets:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active swappers vs LUNA price'))
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='date:N', y='n_txns:Q',color='period')
-        .properties(title='Daily swaps evolution'))
-    
-    col2.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='period:N', y='n_txns:Q',color='period')
-        .properties(title='Swaps comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='date:N', y='n_wallets:Q',color='period')
-        .properties(title='Daily active swappers evolution'))
-    
-    col2.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='period:N', y='n_wallets:Q',color='period')
-        .properties(title='Active swappers comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='date:N', y='fee_luna:Q',color='period')
-        .properties(title='Daily swap fees evolution'))
-    
-    col2.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='period:N', y='fee_luna:Q',color='period')
-        .properties(title='Swap fees comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='date:N', y='n_new_wallets:Q',color='period')
-        .properties(title='Daily new swappers evolution'))
-    
-    col2.altair_chart(alt.Chart(df3)
-        .mark_bar()
-        .encode(x='period:N', y='n_new_wallets:Q',color='period')
-        .properties(title='New swappers comparison'))
+    base=alt.Chart(df3).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='red',opacity=0.5).encode(y='n_new_wallets:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new swappers vs LUNA price'))
     
 
 
 # In[9]:
 
 
-st.subheader("3. Staking before and after holidays")
+st.subheader("4. Staking before and after LUNA price movements")
 st.markdown('**Methods:**')
-st.write('In this analysis we will focus on the Terra staking. More specifically, we will analyze the following data:')
-st.markdown('● Staking actions')
-st.markdown('● Stakers')
-st.markdown('● Validators')
+st.write('In this analysis we will focus on the Terra staking against LUNA price evolution. More specifically, we will analyze the following data:')
+st.markdown('● Staking actions vs LUNA price')
+st.markdown('● Active stakers vs LUNA price')
+st.markdown('● Active validators vs LUNA price')
 
 
 
 sql="""
---credits: cryptolcicle
-with txns as(
+with
+luna as (
+select
+  trunc(recorded_hour,'hour') as date,
+  avg(close) as price_usd
+  from crosschain.core.fact_hourly_prices where id='terra-luna-2' and date>='2023-01-01'
+  group by date
+), 
+txns as(
 select 
-  date_trunc('day',block_timestamp) as date,
-      case when date>='2022-12-23' then 'Holidays period' else 'Before Holidays' end as period,
+  date_trunc('hour',block_timestamp) as date,
   count(distinct tx_id) as n_txns,
   count(distinct delegator_address) as n_wallets,
   count(distinct validator_address) as n_validators,
@@ -485,7 +378,7 @@ select
   sum(fee_luna) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_fee_luna
 from terra.core.ez_staking
   where action = 'Delegate'
-  and block_timestamp >= '2022-12-08' and block_timestamp <= '2023-01-08'
+  and block_timestamp >= '2023-01-01'
 group by date, period
 order by date desc
 ),
@@ -495,12 +388,12 @@ select
   count(delegator_address) as n_new
   from (
 select 
-  date_trunc('day',min(block_timestamp)) as date,
+  date_trunc('hour',min(block_timestamp)) as date,
   delegator_address
 from terra.core.ez_staking
 group by delegator_address
 )
-  where date >= '2022-12-08' and date <= '2023-01-08'
+  where date >= '2023-01-01'
 group by date
 ),
 new_validators as (
@@ -509,24 +402,24 @@ select
   count(validator_address) as n_new
   from (
 select 
-  date_trunc('day',min(block_timestamp)) as date,
+  date_trunc('hour',min(block_timestamp)) as date,
   validator_address
 from terra.core.ez_staking
 group by validator_address
 )
-  where date >= '2022-12-08' and date <= '2023-01-08'
+  where date >= '2023-01-01'
 group by date
 )
 
 select 
   t.*,
+  price_usd,
   coalesce(n.n_new, 0) as n_new_wallets,
-  sum(n_new_wallets) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_new_wallets,
-  coalesce(v.n_new, 0) as n_new_validators,
-  sum(n_new_validators) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_new_validators
+  coalesce(v.n_new, 0) as n_new_validators
 from txns t 
   left join new_wallets n using(date)
   left join new_validators v using(date)
+  left join luna l using(date)
 order by date desc
 """
 
@@ -536,81 +429,32 @@ results = memory(sql)
 df = pd.DataFrame(results.records)
 df.info()
 
-
-
 with st.expander("Check the analysis"):
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_txns:Q',color='period')
-        .properties(title='Daily staking actions evolution'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='blue',opacity=0.5).encode(y='n_txns:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly staking actions vs LUNA price'))
     
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_txns:Q',color='period')
-        .properties(title='Staking actions comparison'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='red',opacity=0.4).encode(y='n_wallets:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active stakers vs LUNA price'))
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_wallets:Q',color='period')
-        .properties(title='Daily active stakers evolution'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='dark green',opacity=0.5).encode(y='n_validators:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly active validators vs LUNA price'))
     
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_wallets:Q',color='period')
-        .properties(title='Active stakers comparison'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='red',opacity=0.6).encode(y='n_new_wallets:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new stakers vs LUNA price'))
     
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_validators:Q',color='period')
-        .properties(title='Daily validators evolution'))
-    
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_validators:Q',color='period')
-        .properties(title='Active validators comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='fee_luna:Q',color='period')
-        .properties(title='Daily staking fees evolution'))
-    
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='fee_luna:Q',color='period')
-        .properties(title='Staking fees comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_new_wallets:Q',color='period')
-        .properties(title='Daily new stakers evolution'))
-    
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_new_wallets:Q',color='period')
-        .properties(title='New stakers comparison'))
-    
-    col1,col2=st.columns(2)
-    with col1:
-        st.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='date:N', y='n_new_validators:Q',color='period')
-        .properties(title='Daily new validators evolution'))
-    
-    col2.altair_chart(alt.Chart(df)
-        .mark_bar()
-        .encode(x='period:N', y='n_new_validators:Q',color='period')
-        .properties(title='New validators comparison'))
+    base=alt.Chart(df).encode(x=alt.X('date:O'))
+    line=base.mark_line(color='orange').encode(y=alt.Y('price_usd:Q', axis=alt.Axis(grid=True)))
+    bar=base.mark_bar(color='green',opacity=0.5).encode(y='n_new_validators:Q')
+    st.altair_chart((bar + line).resolve_scale(y='independent').properties(title='Hourly new validators vs LUNA price'))
     
 
 
@@ -618,6 +462,7 @@ with st.expander("Check the analysis"):
 
 
 st.markdown('This dashboard has been done by _Cristina Tintó_ powered by **Flipside Crypto** data and carried out for **MetricsDAO**.')
+st.markdown('All the codes can be found in [Github](https://github.com/cristinatinto/terra-price-run-investigation-)')
 
 
 # In[ ]:
