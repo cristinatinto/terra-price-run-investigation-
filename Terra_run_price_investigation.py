@@ -372,10 +372,7 @@ select
   count(distinct tx_id) as n_txns,
   count(distinct delegator_address) as n_wallets,
   count(distinct validator_address) as n_validators,
-  sum(amount/1e6) as fee_luna,
-  sum(n_txns) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_txns,
-  sum(n_wallets) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_n_wallets,
-  sum(fee_luna) over (partition by period order by date asc rows between unbounded preceding and current row) as cum_fee_luna
+  sum(amount/1e6) as fee_luna
 from terra.core.ez_staking
   where action = 'Delegate'
   and block_timestamp >= '2023-01-01'
