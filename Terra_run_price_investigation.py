@@ -35,7 +35,7 @@ for percent_complete in range(100):
 
 st.title('Terra Run Price Investigation')
 st.write('')
-st.markdown('Beginning in the wee hours of Monday, January 9 (ET), the price of LUNA skyrocketed, from $1.37 to a high of nearly $2 before settling down at roughly $1.60.')
+st.markdown('Beginning in the wee hours of Monday, January 9 (ET), the price of LUNA skyrocketed, from 1.37 to a high of nearly 2 before settling down at roughly 1.60.')
 st.markdown(' The idea of this work is to try to find some reason why these jumps are occurring. The goal here is to understand why did the price jump so suddenly on Monday night and if the price seems to remain above or below the current marks.')
 st.write('')
 st.write('For this reason, this dashboard comprehens the following sections:')
