@@ -101,14 +101,15 @@ df2 = pd.DataFrame(results2.records)
 df2.info()
 
 with st.expander("Check the analysis"):
-	st.altair_chart(alt.Chart(df)
-	.mark_line()
-	.encode(x='date:N', y='price_usd:Q',color='symbol')
-	.properties(title='Hourly prices evolution'))
+    st.altair_chart(alt.Chart(df)
+    .mark_line()
+    .encode(x='date:N', y='price_usd:Q',color='symbol')
+    .properties(title='Hourly prices evolution'))
     
-        .mark_line()
-        .encode(x='date:N', y='price_usd:Q',color='symbol')
-        .properties(title='Daily prices evolution'))
+    st.altair_chart(alt.Chart(df2)
+    .mark_line()
+    .encode(x='date:N', y='price_usd:Q',color='symbol')
+    .properties(title='Daily prices evolution'))
 
 
 st.write('')
