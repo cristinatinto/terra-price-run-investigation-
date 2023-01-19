@@ -83,7 +83,7 @@ select
   trunc(recorded_at,'day') as date,
   symbol,
   avg(price) as price_usd
-  from osmosis.core.dim_prices where symbol in ('OSMO','ATOM','JUNO','EVMOS') and date>='2023-01-01'
+  from osmosis.core.dim_prices where symbol in ('OSMO','JUNO','EVMOS') and date>='2023-01-01'
   group by 1,2
 )
 SELECT * from t1 union select * from t2
@@ -104,11 +104,11 @@ with st.expander("Check the analysis"):
     st.altair_chart(alt.Chart(df)
     .mark_line()
     .encode(x='date:N', y='price_usd:Q',color='symbol')
-    .properties(title='Hourly prices evolution'))
+    .properties(title='Hourly prices evolution'),width=1000)
     
     st.altair_chart(alt.Chart(df2)
     .mark_line()
-    .encode(x='date:N', y='price_usd:Q',color='symbol')
+    .encode(x='date:N', y='price_usd:Q',color='symbol',width=1000)
     .properties(title='Daily prices evolution'))
 
 
