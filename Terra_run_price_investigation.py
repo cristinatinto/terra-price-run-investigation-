@@ -108,8 +108,8 @@ with st.expander("Check the analysis"):
     
     st.altair_chart(alt.Chart(df2)
     .mark_line()
-    .encode(x='date:N', y='price_usd:Q',color='symbol',width=1000)
-    .properties(title='Daily prices evolution'))
+    .encode(x='date:N', y='price_usd:Q',color='symbol')
+    .properties(title='Daily prices evolution'),width=1000)
 
 
 st.write('')
