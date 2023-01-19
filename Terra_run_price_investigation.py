@@ -379,7 +379,7 @@ select
 from terra.core.ez_staking
   where action = 'Delegate'
   and block_timestamp >= '2023-01-01'
-group by date, period
+group by date
 order by date desc
 ),
 new_wallets as (
