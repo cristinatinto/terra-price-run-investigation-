@@ -62,7 +62,7 @@ select
   trunc(recorded_at,'hour') as date,
   symbol,
   avg(price) as price_usd
-  from osmosis.core.dim_prices where symbol in ('OSMO','ATOM','JUNO','EVMOS') and date>='2023-01-01'
+  from osmosis.core.dim_prices where symbol in ('OSMO','JUNO','EVMOS') and date>='2023-01-01'
   group by 1,2
 )
 SELECT * from t1 union select * from t2
